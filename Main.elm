@@ -44,8 +44,6 @@ update msg model =
         FetchFail _ ->
             (model, Cmd.none)
 
-
-
 -- VIEW
 
 view : Model -> Html Msg
@@ -64,7 +62,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.none
 
--- HTTP
+-- HTTP method
 
 getRandomGif : String -> Cmd Msg
 getRandomGif topic =
