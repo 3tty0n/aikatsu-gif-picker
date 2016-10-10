@@ -5,10 +5,11 @@ import Html.Events exposing (..)
 import Http
 import Json.Decode as Json
 import Task
+import WebSocket
 
 main =
   App.program
-    { init = init "Aikatsu"
+    { init = init
     , view = view
     , update = update
     , subscriptions = subscriptions
@@ -18,49 +19,57 @@ main =
 
 type alias Model =
     { topic: String
+    , input: String
     , gifUrl : String
     }
 
-init : String -> (Model, Cmd Msg)
-init topic =
-    ( Model topic "waiting.gif"
-    , getRandomGif topic
+init : (Model, Cmd Msg)
+init =
+    ( Model "aikatsu" "" "waiting.gif"
+    , getRandomGif "aikatsu"
     )
 
 -- UPDATE
 
 type Msg
-    = MorePlease
-    | FetchSucceed String
+    = FetchSucceed String
     | FetchFail Http.Error
+    | Input String
+    | Send
+    | NewMessage String
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
-        MorePlease ->
-            (model, getRandomGif model.topic)
         FetchSucceed newUrl ->
-            (Model model.topic newUrl, Cmd.none)
+            (Model model.topic "" newUrl, Cmd.none)
         FetchFail _ ->
             (model, Cmd.none)
+        Input newInput ->
+            (Model model.topic newInput model.gifUrl, Cmd.none)
+        Send ->
+            (Model model.topic "" model.gifUrl, WebSocket.send echoServer model.input)
+        NewMessage str ->
+            (model, getRandomGif str)
+
 
 -- VIEW
 
 view : Model -> Html Msg
 view model =
     div []
-        [ h1 [] [ text "Aikatsu Gif Picker" ]
-        , h2 [] [ text model.topic ]
+        [ h1 [] [ text "Gif Search Engine" ]
         , img [ src model.gifUrl] []
-        , button [ onClick MorePlease ] [ text "More Please!"]
+        , div []
+            [ input  [ onInput Input, value model.input ] []
+            , button [ onClick Send ] [ text "Send" ] ]
         ]
 
 -- SUBSCRIPTIONS
 
-
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.none
+    WebSocket.listen echoServer NewMessage
 
 -- HTTP method
 
@@ -75,3 +84,9 @@ getRandomGif topic =
 decodeGifUrl : Json.Decoder String
 decodeGifUrl =
     Json.at ["data", "image_url"] Json.string
+
+-- WebSocket method
+
+echoServer : String
+echoServer =
+  "wss://echo.websocket.org"
