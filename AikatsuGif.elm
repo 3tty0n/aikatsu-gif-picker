@@ -50,9 +50,8 @@ view : Model -> Html Msg
 view model =
     div []
         [ h1 [] [ text "Aikatsu Gif Picker" ]
-        , h2 [] [ text model.topic ]
-        , img [ src model.gifUrl] []
-        , button [ onClick MorePlease ] [ text "More Please!"]
+        , button [ onClick MorePlease ] [ text "アイ！カツ！"]
+        , div [] [ img [ src model.gifUrl] [ text "Aikatsu Gif"] ]
         ]
 
 -- SUBSCRIPTIONS
